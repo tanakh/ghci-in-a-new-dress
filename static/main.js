@@ -10,7 +10,7 @@ $(function() {
   var showing_calltips = false;
   var calltips_word = "";
 
-  var keywords = ["as", "case,", "class", "data", "data", "default", "deriving", "deriving", "do", "forall", "foreign", "hiding", "if,", "import", "infix,", "instance", "let", "mdo", "module", "newtype", "proc", "qualified", "rec", "type", "type", "type", "where", "then", "else", "infixl", "infixr", "in" ];
+  var keywords = ["as", "case,", "class", "data", "default", "deriving", "deriving", "do", "forall", "foreign", "hiding", "if,", "import", "infix,", "instance", "let", "mdo", "module", "newtype", "proc", "qualified", "rec", "type", "type", "type", "where", "then", "else", "infixl", "infixr", "in" ];
 
   // Debugging utilities
   var log = function(){ console.log.apply(console, arguments)};
