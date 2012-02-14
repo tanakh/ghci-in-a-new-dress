@@ -382,19 +382,23 @@ $(function() {
   $(document).bind('keydown', function(e) {
     if (e.which === BACKSPACE) {
       add_to_console(BACKSPACE);
-      e.preventDefault();
-      return false;
+		return false;
     } else if (e.which === ENTER) {
       add_to_console(ENTER);
+		return false;
     } else if (e.which === TAB) {
-      e.preventDefault();
       autocomplete();
+		return false;
     }
   });
 
+  /* Handle key input */
   $(document).bind('keypress', function(e) {
-    key = String.fromCharCode(e.which);
-    add_to_console(key);
+    if (!(e.which === BACKSPACE || e.which === ENTER || e.which === TAB || e.metaKey || e.ctrlKey)) {
+		key = String.fromCharCode(e.which);
+		add_to_console(key);
+		return false;
+	 }
   });
 
   var show_calltips = function() {
