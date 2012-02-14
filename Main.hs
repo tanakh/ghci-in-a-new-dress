@@ -1,5 +1,3 @@
-{-# LANGUAGE TypeFamilies, QuasiQuotes, MultiParamTypeClasses, TemplateHaskell,
-             OverloadedStrings #-}
 import Yesod
 import Yesod.Static
 
