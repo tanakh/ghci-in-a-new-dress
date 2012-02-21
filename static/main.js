@@ -355,26 +355,26 @@ $(function() {
    * all and is instead just AJAX. */
   var add_to_console = function(value) {
     var $content = $("#active #content");
-    var old_html = $content.html();
-    var new_html;
+    var old_txt = $content.text();
+    var new_txt;
 
     if (value === ENTER) {
-      add_output_line(old_html);
+      add_output_line(old_txt);
       showing_calltips = false;
       return;
     } else if (value === BACKSPACE) {
-      if (old_html.length == 0) {
+      if (old_txt.length == 0) {
         return;
       }
 
-      new_html = old_html.slice(0, old_html.length - 1);
+      new_txt = old_txt.slice(0, old_txt.length - 1);
     } else if (value === TAB) { 
       autocomplete();
     } else {
-      new_html = old_html + value;
+      new_txt = old_txt + value;
     }
 
-    $content.html(new_html);
+    $content.text(new_txt);
     move_autocomplete();
   }
 
