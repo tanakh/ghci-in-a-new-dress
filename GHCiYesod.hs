@@ -1,13 +1,11 @@
-{-# LANGUAGE MultiParamTypeClasses, TemplateHaskell, TypeFamilies, QuasiQuotes #-}
+{-# LANGUAGE MultiParamTypeClasses, TemplateHaskell, TypeFamilies, QuasiQuotes, RecordWildCards #-}
 module GHCiYesod where
 
-import Control.Concurrent (MVar, newMVar, putMVar, takeMVar, threadDelay)
+import Control.Concurrent (MVar, withMVar, threadDelay)
 import qualified Data.ByteString.Char8 as B
-import Data.IORef
 import Data.List
 import qualified Data.Text as T
 import System.IO
-import System.IO.Unsafe
 import System.Process
 
 import Yesod
@@ -21,13 +19,14 @@ staticFiles "static"
 mkYesod "GHCiOnline" [parseRoutes|
 /       HomeR   GET
 /ghci   GHCIR   POST
-/static StaticR Static helloWorldStatic
+/static StaticR Static ghciStatic
 |]
 
 data GHCiOnline
   = GHCiOnline
-    { helloWorldStatic :: Static
-    , ghci :: (Handle, Handle, Handle, ProcessHandle)
+    { ghciStatic :: Static
+    , ghciProc :: (Handle, Handle, Handle, ProcessHandle)
+    , ghciMutex :: MVar ()
     }
 
 instance Yesod GHCiOnline where
@@ -68,10 +67,6 @@ getHomeR = do
           <ul id="sidelist">
 |]
 
-lockGHCI :: MVar Bool
-{-# NOINLINE lockGHCI #-}
-lockGHCI = unsafePerformIO (newMVar True)
-
 ghciPath :: FilePath
 ghciPath = "ghci"
 
@@ -86,9 +81,10 @@ queryGHCI input | last input /= '\n'           = queryGHCI $ input ++ "\n"
 queryGHCI input | ":doc" `isPrefixOf` input    = liftIO $ queryHaddock input
 queryGHCI input | ":hoogle" `isPrefixOf` input = liftIO $ queryHoogle input
 queryGHCI input = do
-    -- Lock this function. Only 1 person can query ghci at a time.
-    _ <- liftIO $ takeMVar lockGHCI
-
+  GHCiOnline { ghciProc = (hin, hout, herr, _), ghciMutex = ghciMutex } <- getYesod
+  
+  -- Lock this function. Only 1 person can query ghci at a time.
+  liftIO $ withMVar ghciMutex $ \_ -> do
     -- Get Hlint suggests only if it's Haskell code and not an interpretor
     -- command If "No suggestions", then don't send it in down and if it already
     -- ends with '\n', don't do anything
@@ -99,22 +95,18 @@ queryGHCI input = do
                       then hlint
                       else hlint ++ "\n"
     
-    GHCiOnline { ghci = (hin, hout, herr, _) } <- getYesod
+    hPutStr hin input
     
-    liftIO $ hPutStr hin input
-    
-    errors <- liftIO $ do
+    errors <- do
         hPutStr hin "oopsthisisnotavariable\n"
         err <- getErrors herr
         return err
   
     -- This is a hack that lets us discover where the end of the output is.
     -- We will keep reading until we see the sentinel.
-    liftIO $ hPutStr hin (":t " ++ sentinel ++ "\n")
+    hPutStr hin (":t " ++ sentinel ++ "\n")
 
-    output <- liftIO $ readUntilDone hout
-
-    liftIO $ putMVar lockGHCI True
+    output <- readUntilDone hout
 
     if trimWhitespace errors == "" 
         then return $ hlintSugg ++ output
@@ -149,4 +141,3 @@ skipIntro :: Handle -> IO ()
 skipIntro h = do
   threadDelay $ 2 * 10 ^ (6 :: Int)
   B.hPutStrLn stdout =<< B.hGetNonBlocking h (2^(31::Int))
-

@@ -1,8 +1,6 @@
 module Main where
 
 import Control.Concurrent
-import Data.IORef
-import Data.Maybe
 import System.IO
 import System.Process
 
@@ -10,7 +8,6 @@ import Yesod
 import Yesod.Static
 
 import GHCiYesod
-import NewGHCi
 
 main :: IO ()
 main = do
@@ -24,8 +21,9 @@ main = do
     hSetBuffering hin NoBuffering
     hSetBuffering hout NoBuffering
     hSetBuffering herr NoBuffering
-
     skipIntro hout
+    
+    mv <- newMVar ()
 
     s <- staticDevel "static"
-    warpDebug 3000 $ GHCiOnline s (hin, hout, herr, ph)
+    warpDebug 3000 $ GHCiOnline s (hin, hout, herr, ph) mv
