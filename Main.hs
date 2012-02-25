@@ -27,10 +27,5 @@ main = do
 
     skipIntro hout
 
-    writeIORef hInGHCI hin
-    writeIORef hOutGHCI hout
-    writeIORef hErrGHCI herr
-    
     s <- staticDevel "static"
-
-    warpDebug 3000 $ GHCiOnline s
+    warpDebug 3000 $ GHCiOnline s (hin, hout, herr, ph)
