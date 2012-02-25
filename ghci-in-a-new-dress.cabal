@@ -39,5 +39,4 @@ Executable ghci-in-a-new-dress
                    , yesod
                    , yesod-core
                    , yesod-static
-  Ghc-options: -Wall -Werror
-
+  Ghc-options: -Wall

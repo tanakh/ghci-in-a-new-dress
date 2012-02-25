@@ -56,4 +56,3 @@ getHomeR = do
           <h3>Inspector
           <ul id="sidelist">
 |]
-
